@@ -5,6 +5,7 @@ using UnityEngine;
 public class NOTTrainer : Trainer
 {
 	NeuralNetwork net;
+	NetworkPattern pattern;
 	int numberOfTests;
 	SimulationTypeEnum simulationType;
 	string directory;
@@ -17,13 +18,38 @@ public class NOTTrainer : Trainer
 		get { return numberOfTests; }
 		set { numberOfTests = value; }
 	}
-	protected override NeuralNetwork Net { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-	protected override SimulationTypeEnum SimulationType { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-	protected override string Directory { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-	protected override string FileName { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-	protected override string Path { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+	protected override NeuralNetwork Net
+	{
+		get { return net; }
+		set { net = value; }
+	}
+	protected override NetworkPattern Pattern
+	{
+		get { return pattern; }
+		set { pattern = value; }
+	}
+	protected override SimulationTypeEnum SimulationType
+	{
+		get { return simulationType; }
+		set { simulationType = value; }
+	}
+	protected override string Directory
+	{
+		get { return directory; }
+		set { directory = value; }
+	}
+	protected override string FileName
+	{
+		get { return fileName; }
+		set { fileName = value; }
+	}
+	protected override string Path
+	{
+		get { return path; }
+		set { path = value; }
+	}
 
-	protected override void Train()
+	protected override void Training()
 	{
 		throw new System.NotImplementedException();
 	}

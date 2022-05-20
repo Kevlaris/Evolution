@@ -6,9 +6,10 @@ using UnityEngine;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-public class NeuralNetwork : System.IComparable<NeuralNetwork>
+[System.Serializable]
+public class NeuralNetwork
 {
-	int[] layer; //number of neurons in layers
+	public int[] layer; //number of neurons in layers
 	Layer[] layers; //layers
 	float[][] neurons; //values of neurons in layers - 2D matrix
 	float[][][] weights; //weights leading to neurons in layers - 3D matrix
@@ -392,24 +393,9 @@ public class NeuralNetwork : System.IComparable<NeuralNetwork>
 	{
 		return fitness;
 	}
-
-	/// <summary>
-	/// Compare and sort two networks based on fitness
-	/// </summary>
-	/// <param name="other">Network to be compared to</param>
-	/// <returns>1 if original network is superior, 0 if equal, or -1 if inferior to other network</returns>
-	public int CompareTo(NeuralNetwork other)
-	{
-		if (other == null) return 1;
-
-		if (GetFitness() > other.GetFitness())
-			return 1;
-		else if (GetFitness() < other.GetFitness())
-			return -1;
-		else
-			return 0;
-	}
 	#endregion
+
+	#region Save & Load
 
 	/// <summary>
 	/// Saves network to directory
@@ -456,4 +442,6 @@ public class NeuralNetwork : System.IComparable<NeuralNetwork>
 		}
 		return false;
 	}
+
+	#endregion
 }

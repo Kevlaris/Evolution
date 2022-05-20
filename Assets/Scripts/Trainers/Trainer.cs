@@ -15,6 +15,7 @@ public abstract class Trainer : MonoBehaviour
 	}
 
 	protected abstract NeuralNetwork Net { get; set; }
+	protected abstract NetworkPattern Pattern { get; set; }
 	public abstract int NumberOfTests { get; set; }
 	protected abstract SimulationTypeEnum SimulationType { get; set; }
 	protected abstract string Directory { get; set; }
@@ -24,7 +25,7 @@ public abstract class Trainer : MonoBehaviour
 	protected virtual void Start()
 	{
 		PreTraining();
-		Train();
+		Training();
 		PostTraining();
 	}
 
@@ -39,11 +40,12 @@ public abstract class Trainer : MonoBehaviour
 				Load(Path);
 				break;
 			default:
+				Net = new NeuralNetwork(Pattern);
 				break;
 		}
 	}
 
-	protected abstract void Train();
+	protected abstract void Training();
 
 	protected virtual void PostTraining()
 	{
@@ -56,9 +58,40 @@ public abstract class Trainer : MonoBehaviour
 				DateTime now = DateTime.Now.ToLocalTime();
 				Debug.Log("SAVED: " + Net.SaveNetwork(Directory, FileName + "#" + NumberOfTests));
 				break;
-			case SimulationTypeEnum.DEFAULT:
+			default:
 				break;
 		}
+	}
+
+	protected virtual float Train(float[][] inputs, float[][] expected)
+	{
+		int num;
+		if (inputs.Length == 0 || expected.Length == 0)
+		{
+			Debug.LogError("No parameters, returning -1", this);
+			return -1;
+		}
+		else if (inputs.Length < expected.Length)
+		{
+			Debug.LogWarning("More expected values than inputs, excess will be ignored", this);
+			num = inputs.Length;
+		}
+		else if (inputs.Length > expected.Length)
+		{
+			Debug.LogWarning("More inputs than expected values, excess will be ignored", this);
+			num = expected.Length;
+		}
+		else
+		{
+			num = inputs.Length;
+		}
+
+		for (int i = 0; i < num; i++)
+		{
+			//do the training
+		}
+
+		return 0;
 	}
 
 	protected virtual void Load(string path)
