@@ -13,7 +13,7 @@ public class NeuralNetwork
 	Layer[] layers; //layers
 	float[][] neurons; //values of neurons in layers - 2D matrix
 	float[][][] weights; //weights leading to neurons in layers - 3D matrix
-	float fitness; //fitness of the network
+	[SerializeField] public float fitness; //fitness of the network
 
 	BinaryFormatter formatter;
 

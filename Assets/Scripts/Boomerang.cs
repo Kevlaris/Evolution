@@ -21,7 +21,6 @@ public class Boomerang : MonoBehaviour
 	float[] inputs;
 	[SerializeField] float input;
 	[SerializeField] float output;
-	[SerializeField] TMPro.TMP_Text fitnessText;
 
 	private void Start()
 	{
@@ -114,9 +113,6 @@ public class Boomerang : MonoBehaviour
 			{
 				transform.SetPositionAndRotation(new Vector2(transform.position.x, -10), transform.rotation);
 			}
-
-			fitnessText.text = net.GetFitness().ToString();
-			fitnessText.GetComponentInParent<Transform>().rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, 0);
 		}
 	}
 

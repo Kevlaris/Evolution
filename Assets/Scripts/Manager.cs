@@ -12,7 +12,7 @@ public class Manager : MonoBehaviour
 	[Header("Simulation Settings")]
 	[Min(1)] public int population = 25;
 	[SerializeField] int generation = 0;
-	List<NeuralNetwork> nets = new List<NeuralNetwork>();
+	[SerializeField] List<NeuralNetwork> nets = new List<NeuralNetwork>();
 	[SerializeField] List<Boomerang> boomerangs = new List<Boomerang>();
 	bool isTraining = false;
 
@@ -120,9 +120,9 @@ public class Manager : MonoBehaviour
 		if (b == null) return 1;
 
 		if (a.GetFitness() > b.GetFitness())
-			return 1;
-		else if (a.GetFitness() < b.GetFitness())
 			return -1;
+		else if (a.GetFitness() < b.GetFitness())
+			return 1;
 		else
 			return 0;
 	}
