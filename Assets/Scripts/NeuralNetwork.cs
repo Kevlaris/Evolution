@@ -6,7 +6,7 @@ using UnityEngine;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-[System.Serializable]
+[Serializable]
 public class NeuralNetwork
 {
 	public int[] layer; //number of neurons in layers

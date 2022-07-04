@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
+[Serializable]
 public class Boomerang : MonoBehaviour
 {
 	bool initialized = false;
@@ -17,7 +18,8 @@ public class Boomerang : MonoBehaviour
 	Vector2 prevPos;
 
 	[Header("Artificial Intelligence")]
-	public NeuralNetwork net;
+	[SerializeField] float fitness;
+	[SerializeField] public NeuralNetwork net;
 	float[] inputs;
 	[SerializeField] float input;
 	[SerializeField] float output;
@@ -113,6 +115,7 @@ public class Boomerang : MonoBehaviour
 			{
 				transform.SetPositionAndRotation(new Vector2(transform.position.x, -10), transform.rotation);
 			}
+			fitness = net.GetFitness();
 		}
 	}
 

@@ -561,9 +561,8 @@ MonoBehaviour:
   creaturePrefab: {fileID: 4039319723344007683, guid: aefd08908649eac4aac0563fedfcced7,
     type: 3}
   hex: {fileID: 148496626}
-  population: 5
+  population: 10
   generation: 0
-  nets: []
   boomerangs: []
   timerText: {fileID: 1992377142}
   generationText: {fileID: 28130159}

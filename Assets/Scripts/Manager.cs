@@ -9,10 +9,11 @@ public class Manager : MonoBehaviour
 	public UnityEngine.Object creaturePrefab;
 	public Transform hex;
 
+	System.Random rnd = new System.Random();
+
 	[Header("Simulation Settings")]
 	[Min(1)] public int population = 25;
-	[SerializeField] int generation = 0;
-	[SerializeField] List<NeuralNetwork> nets = new List<NeuralNetwork>();
+	[SerializeField] protected int generation = 0;
 	[SerializeField] List<Boomerang> boomerangs = new List<Boomerang>();
 	bool isTraining = false;
 
@@ -31,34 +32,7 @@ public class Manager : MonoBehaviour
 
 		if (!isTraining)
 		{
-			if (generation == 0)
-			{
-				currentTime = 0;
-				InstantiateCreatureNetworks(defaultPattern);
-			}
-			else
-			{
-				nets.Sort(Compare);
-				for (int i = 0; i < population / 2; i++)
-				{
-					nets[i] = new NeuralNetwork(nets[i + (population / 2)]);
-					nets[i].Mutate();
-
-					nets[i + (population / 2)] = new NeuralNetwork(nets[i + (population / 2)]);
-				}
-
-				for (int i = 0; i < nets.Count; i++)
-				{
-					nets[i].SetFitness(0f);
-				}
-			}
-
-			generation++;
-			generationText.text = "Generation " + generation;
-			currentTime = 0;
-
-			isTraining = true;
-			InstanceCreatures();
+			NextGeneration();
 		}
 		else
 		{
@@ -71,57 +45,78 @@ public class Manager : MonoBehaviour
 				isTraining = false;
 			}
 		}
-		
 	}
 
-	/// <summary>
-	/// Creates new creatures if not enough, deletes some if more, and resets their position.
-	/// </summary>
-	void InstanceCreatures()
+	void NextGeneration()
 	{
-		if (boomerangs.Count < population)
+		isTraining = false;
+		if (generation == 0)
 		{
-			for (int i = 0; i < population; i++)
+			InitiateCreatures();
+		}
+		else
+		{
+			boomerangs.Sort(CompareBoomerangs);
+			List<NeuralNetwork> goodNets = new List<NeuralNetwork>();
+			for (int i = 0; i < boomerangs.Count / 2; i++)
 			{
-				Boomerang boomerang = ((GameObject)Instantiate(creaturePrefab, transform)).GetComponent<Boomerang>();
-				boomerang.Init(nets[i], hex);
-				boomerangs.Add(boomerang);
+				goodNets.Add(boomerangs[i].net);
+			}
+			for (int i = (boomerangs.Count/2)-1; i < boomerangs.Count/2; i++)
+			{
+				boomerangs[i].net = new NeuralNetwork(goodNets[rnd.Next(goodNets.Count)]);
+				boomerangs[i].net.Mutate();
+			}
+			for (int i = 0; i < boomerangs.Count; i++)
+			{
+				boomerangs[i].transform.position = Vector3.zero;
+				boomerangs[i].net.SetFitness(0);
+				boomerangs[i].name = "Boomerang " + i;
 			}
 		}
-		else if (boomerangs.Count > population)
-		{
-			for (int i = population; i < boomerangs.Count; i++)
-			{
-				boomerangs.RemoveAt(i);
-			}
-		}
-		for (int i = 0; i < boomerangs.Count; i++)
-		{
-			boomerangs[i].transform.position = Vector2.zero;
-			boomerangs[i].net.SetFitness(0);
-		}
-	}
 
-	void InstantiateCreatureNetworks(NetworkPattern pattern)
+		generation++;
+		generationText.text = "Generation " + generation;
+		currentTime = 0;
+
+		isTraining = true;
+	}
+	
+	void InitiateCreatures()
 	{
 		for (int i = 0; i < population; i++)
 		{
-			nets.Add(new NeuralNetwork(pattern));
+			Boomerang boomerang = ((GameObject)Instantiate(creaturePrefab, transform)).GetComponent<Boomerang>();
+			boomerang.Init(new NeuralNetwork(defaultPattern), hex);
+			boomerang.name = "Boomerang " + i;
+			boomerangs.Add(boomerang);
 		}
 	}
 
 	/// <summary>
-	/// Compare and sort two networks based on fitness
+	/// Compare and sort two <see cref="NeuralNetwork">NeuralNetworks</see> based on fitness
 	/// </summary>
-	/// <param name="other">Network to be compared to</param>
-	/// <returns>1 if original network is superior, 0 if equal, or -1 if inferior to other network</returns>
-	public int Compare(NeuralNetwork a, NeuralNetwork b)
+	public int CompareNetworks(NeuralNetwork a, NeuralNetwork b)
 	{
 		if (b == null) return 1;
 
 		if (a.GetFitness() > b.GetFitness())
 			return -1;
 		else if (a.GetFitness() < b.GetFitness())
+			return 1;
+		else
+			return 0;
+	}
+	/// <summary>
+	/// Compare and sort two <see cref="Boomerang">Boomerangs</see> based on fitness
+	/// </summary>
+	public int CompareBoomerangs(Boomerang a, Boomerang b)
+	{
+		if (b == null) return 1;
+
+		if (a.net.GetFitness() > b.net.GetFitness())
+			return -1;
+		else if (a.net.GetFitness() < b.net.GetFitness())
 			return 1;
 		else
 			return 0;
