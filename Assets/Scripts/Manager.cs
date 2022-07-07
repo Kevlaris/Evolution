@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Manager : MonoBehaviour
@@ -56,21 +56,30 @@ public class Manager : MonoBehaviour
 		}
 		else
 		{
-			boomerangs.Sort(CompareBoomerangs);
-			List<NeuralNetwork> goodNets = new List<NeuralNetwork>();
-			for (int i = 0; i < boomerangs.Count / 2; i++)
+			NeuralNetwork[] nets = new NeuralNetwork[boomerangs.Count];
+			for (int i = 0; i < boomerangs.Count; i++)
 			{
-				goodNets.Add(boomerangs[i].net);
+				nets[i] = boomerangs[i].net;
 			}
-			for (int i = (boomerangs.Count/2)-1; i < boomerangs.Count/2; i++)
+			NeuralNetwork[] goodNets = NeuralNetwork.SelectBest(nets, population / 2);
+			goodNets = goodNets.OrderBy(x => rnd.Next()).ToArray();
+			NeuralNetwork[] newNets = new NeuralNetwork[population];
+			for (int i = 0; i < population; i++)
 			{
-				boomerangs[i].net = new NeuralNetwork(goodNets[rnd.Next(goodNets.Count)]);
-				boomerangs[i].net.Mutate();
+				if (i < goodNets.Length)
+				{
+					newNets[i] = goodNets[i];
+				}
+				else if (i >= goodNets.Length)
+				{
+					newNets[i] = goodNets[i % goodNets.Length].Reproduce();
+				}
 			}
 			for (int i = 0; i < boomerangs.Count; i++)
 			{
+				boomerangs[i].net = newNets[i];
+				boomerangs[i].net.SetFitness(0f);
 				boomerangs[i].transform.position = Vector3.zero;
-				boomerangs[i].net.SetFitness(0);
 				boomerangs[i].name = "Boomerang " + i;
 			}
 		}

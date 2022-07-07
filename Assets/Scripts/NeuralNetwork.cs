@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Linq;
 
 [Serializable]
 public class NeuralNetwork
@@ -15,7 +14,8 @@ public class NeuralNetwork
 	float[][][] weights; //weights leading to neurons in layers - 3D matrix
 	[SerializeField] public float fitness; //fitness of the network
 
-	BinaryFormatter formatter;
+	private BinaryFormatter formatter;
+	private System.Random rnd = new System.Random((int)(Time.frameCount / Time.realtimeSinceStartup * DateTime.Now.Second));
 
 	#region Constructors
 
@@ -40,9 +40,8 @@ public class NeuralNetwork
 	}
 
 	/// <summary>
-	/// Creates a network based on a Network Pattern
+	/// Creates a network based on a <see cref="NetworkPattern">Network Pattern</see>
 	/// </summary>
-	/// <param name="pattern">Pattern to construct from</param>
 	public NeuralNetwork(NetworkPattern pattern)
 	{
 		this.layer = new int[pattern.numberOfNeuronsInLayers.Length];
@@ -335,6 +334,8 @@ public class NeuralNetwork
 		}
 	}
 
+	#region Reproduction
+
 	/// <summary>
 	/// Mutate the current network. Has a 0.8% chance to do something.
 	/// </summary>
@@ -348,28 +349,28 @@ public class NeuralNetwork
 				{
 					float weight = weights[i][j][k];
 
-					float randomNumber = UnityEngine.Random.Range(0f, 1f) * 1000f;
+					float randomNumber = (float)rnd.NextDouble();
 
-					if (randomNumber <= 2)
+					if (randomNumber <= 0.002f)
 					{
 						//flip sign of weight
 						weight *= -1;
 					}
-					else if (randomNumber <= 4f)
+					else if (randomNumber <= 0.004f)
 					{
 						//pick random between -1 and 1
-						weight = UnityEngine.Random.Range(-0.5f, 0.5f);
+						weight = (float)rnd.NextDouble()-0.5f;
 					}
-					else if (randomNumber <= 6f)
+					else if (randomNumber <= 0.006f)
 					{
 						//randomly increase
-						float factor = UnityEngine.Random.Range(0f, 1f) + 1f;
+						float factor = (float)rnd.NextDouble() + 1f;
 						weight *= factor;
 					}
-					else if (randomNumber <= 8f)
+					else if (randomNumber <= 0.008f)
 					{
 						//randomly decrease
-						float factor = UnityEngine.Random.Range(0f, 1f);
+						float factor = (float)rnd.NextDouble();
 						weight *= factor;
 					}
 
@@ -378,6 +379,132 @@ public class NeuralNetwork
 			}
 		}
 	}
+	/// <summary>
+	/// Mutate single weight
+	/// </summary>
+	public float Mutate(float weight)
+	{
+		float randomNumber = (float)rnd.NextDouble();
+
+		if (randomNumber <= 0.002f)
+		{
+			//flip sign of weight
+			weight *= -1;
+		}
+		else if (randomNumber <= 0.004f)
+		{
+			//pick random between -1 and 1
+			weight = (float)rnd.NextDouble() - 0.5f;
+		}
+		else if (randomNumber <= 0.006f)
+		{
+			//randomly increase
+			float factor = (float)rnd.NextDouble() + 1f;
+			weight *= factor;
+		}
+		else if (randomNumber <= 0.008f)
+		{
+			//randomly decrease
+			float factor = (float)rnd.NextDouble();
+			weight *= factor;
+		}
+
+		return weight;
+	}
+
+	/// <summary>
+	/// Mix network's weights with other network's
+	/// </summary>
+	/// <returns>New weight matrix</returns>
+	public float[][][] MixGenes(NeuralNetwork other)
+	{
+		float[][][] newWeights = weights;
+		for (int i = 0; i < newWeights.Length; i++)
+		{
+			for (int j = 0; j < newWeights[i].Length; j++)
+			{
+				for (int k = 0; k < newWeights[i][j].Length; k++)
+				{
+					float randomNumber = (float)rnd.NextDouble();
+					if (randomNumber < 0.01f)   // copy mate's gene - 1%
+					{
+						newWeights[i][j][k] = other.weights[i][j][k];
+					}
+					else if (randomNumber < 0.525f) // copy and mutate mate's gene - 49.25%
+					{
+						newWeights[i][j][k] = Mutate(other.weights[i][j][k]);
+					}
+					else if (randomNumber < 0.995f) // leave and mutate original gene - 49.25%
+					{
+						newWeights[i][j][k] = Mutate(weights[i][j][k]);
+					}
+					// leave gene as it was - 0.5%
+				}
+			}
+		}
+		return newWeights;
+	}
+	/// <summary>
+	/// Mix network's weights with weight matrix
+	/// </summary>
+	/// <returns>New weight matrix</returns>
+	public float[][][] MixGenes(float[][][] otherWeights)
+	{
+		float[][][] newWeights = weights;
+		for (int i = 0; i < newWeights.Length; i++)
+		{
+			for (int j = 0; j < newWeights[i].Length; j++)
+			{
+				for (int k = 0; k < newWeights[i][j].Length; k++)
+				{
+					float randomNumber = (float)rnd.NextDouble();
+					if (randomNumber < 0.01f)   // copy mate's gene - 1%
+					{
+						newWeights[i][j][k] = otherWeights[i][j][k];
+					}
+					else if (randomNumber < 0.525f) // copy and mutate mate's gene - 49.25%
+					{
+						newWeights[i][j][k] = Mutate(otherWeights[i][j][k]);
+					}
+					else if (randomNumber < 0.995f) // leave and mutate original gene - 49.25%
+					{
+						newWeights[i][j][k] = Mutate(weights[i][j][k]);
+					}
+					// leave gene as it was - 0.5%
+				}
+			}
+		}
+		return newWeights;
+	}
+
+	/// <summary>
+	/// Simulate asexual reproduction
+	/// </summary>
+	/// <returns>Child <see cref="NeuralNetwork"/></returns>
+	public NeuralNetwork Reproduce()
+	{
+		NeuralNetwork child = new NeuralNetwork(this);
+		child.Mutate();
+		return child;
+	}
+	/// <summary>
+	/// Simulate sexual reproduction
+	/// </summary>
+	/// <param name="other">Mate <see cref="NetworkPattern"/></param>
+	/// <param name="doubleMutation">Whether to execute mutation on both the weights and the network</param>
+	/// <returns>Child <see cref="NeuralNetwork"/></returns>
+	public NeuralNetwork Reproduce(NeuralNetwork other, bool doubleMutation = false)
+	{
+		NeuralNetwork child = new NeuralNetwork(this);
+		child.CopyWeights(MixGenes(other));
+		if (doubleMutation)
+		{
+			child.Mutate();
+		}
+		return child;
+	}
+
+	#endregion
 
 	#region Fitness
 
@@ -393,17 +520,34 @@ public class NeuralNetwork
 	{
 		return fitness;
 	}
+
+	/// <summary>
+	/// Compare and sort two <see cref="NeuralNetwork">NeuralNetworks</see> based on fitness
+	/// </summary>
+	public static int Compare(NeuralNetwork a, NeuralNetwork b)
+	{
+		if (b == null) return 1;
+		else if (a == null) return -1;
+
+		if (a.GetFitness() > b.GetFitness())
+			return -1;
+		else if (a.GetFitness() < b.GetFitness())
+			return 1;
+		else
+			return 0;
+	}
+
 	#endregion
 
 	#region Save & Load
 
 	/// <summary>
-	/// Saves network to directory
-	/// </summary>
-	/// <returns>Path to file</returns>
-	/// <param name="directory">Directory for the network to be saved to</param>
-	/// <param name="filename">Name of the saved file</param>
-	/// <example>SaveNetwork("/Networks/","My Network")</example>
+			/// Saves network to directory
+			/// </summary>
+			/// <returns>Path to file</returns>
+			/// <param name="directory">Directory for the network to be saved to</param>
+			/// <param name="filename">Name of the saved file</param>
+			/// <example>SaveNetwork("/Networks/","My Network")</example>
 	public string SaveNetwork(string directory = "/Data/Networks/", string filename = "New Network")
 	{
 		DateTime now = DateTime.Now.ToLocalTime();
@@ -444,4 +588,25 @@ public class NeuralNetwork
 	}
 
 	#endregion
+
+	/// <summary>
+	/// Selects an n number of networks with the best fitness out of the array
+	/// </summary>
+	public static NeuralNetwork[] SelectBest(NeuralNetwork[] nets, int n)
+	{
+		if (n < 2)
+		{
+			Debug.LogError("Index out of range");
+			return null;
+		}
+
+		List<NeuralNetwork> netsList = nets.ToList();
+		netsList.Sort(Compare);
+		NeuralNetwork[] bestNets = new NeuralNetwork[n];
+		for (int i = 0; i < n; i++)
+		{
+			bestNets[i] = netsList[i];
+		}
+		return bestNets;
+	}
 }
