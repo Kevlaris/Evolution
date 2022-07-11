@@ -13,9 +13,7 @@ public class Boomerang : MonoBehaviour
 	[SerializeField] Transform hex;
 	[SerializeField] float speed = 1f;
 	[SerializeField] float rotationSpeed = 250f;
-	[Range(0, 360)] public float angle = 0f;	
-
-	Vector2 prevPos;
+	[Range(0, 360)] public float angle = 0f;
 
 	[Header("Artificial Intelligence")]
 	[SerializeField] float fitness;
@@ -33,88 +31,7 @@ public class Boomerang : MonoBehaviour
 	{
 		if (initialized)
 		{
-			/* inputs[0] = hex.position.x;
-			inputs[1] = hex.position.y;
-			output = net.FeedForward(inputs)[0];
-
-			Move(angle + output); */
-
-			float distance = Vector2.Distance(transform.position, hex.position);
-			if (distance > 20f) distance = 20f;
-			gameObject.GetComponent<SpriteRenderer>().color = new Color(distance / 20f, 1f - (distance / 20f), 1f - (distance / 20f));
-
-			//find out how much the boomerang has to turn to face the hex
-			//pass value to neural net
-			//set the output as angular velocity to the rigidbody
-
-			inputs = new float[1];
-
-			angle = transform.eulerAngles.z % 360f;
-			if (angle < 0f) angle += 360f;
-			else if (angle > 360f) angle -= 360f;
-
-			Vector2 deltaVector = (hex.transform.position - transform.position).normalized;
-
-			/*
-			float rad = Mathf.Atan2(deltaVector.y, deltaVector.x);
-			rad *= Mathf.Rad2Deg;
-
-			rad = rad % 360;
-			if (rad < 0)
-			{
-				rad = 360 + rad;
-			}
-
-			rad = 90f - rad;
-			if (rad < 0f)
-			{
-				rad += 360f;
-			}
-			rad = 360 - rad;
-			rad -= angle;
-			if (rad < 0)
-			{
-				rad = 360 + rad;
-			}
-			if (rad >= 180f)
-			{
-				rad = 360 - rad;
-				rad *= -1f;
-			}
-			rad *= Mathf.Rad2Deg;
-
-			inputs.SetValue(input = rad / Mathf.PI, 0);
-			*/
-
-			Quaternion forwardRotation = Quaternion.AngleAxis(angle, Vector3.forward);
-			Vector2 forwardDirection = forwardRotation * new Vector2(distance, 0f);
-
-			input = Vector2.SignedAngle(deltaVector, forwardDirection);
-			inputs[0] = input;
-
-			output = net.FeedForward(inputs)[0];
-
-			rb.velocity = speed * transform.right;
-			rb.angularVelocity = rotationSpeed * output;
-
-			net.AddFitness((180f - Mathf.Abs(input)) / distance);
-
-			if (transform.position.x > 18)
-			{
-				transform.SetPositionAndRotation(new Vector2(18, transform.position.y), transform.rotation);
-			}
-			if (transform.position.y > 10)
-			{
-				transform.SetPositionAndRotation(new Vector2(transform.position.x, 10), transform.rotation);
-			}
-			if (transform.position.x < -18)
-			{
-				transform.SetPositionAndRotation(new Vector2(-18, transform.position.y), transform.rotation);
-			}
-			if (transform.position.y < -10)
-			{
-				transform.SetPositionAndRotation(new Vector2(transform.position.x, -10), transform.rotation);
-			}
+			Move();
 			fitness = net.GetFitness();
 		}
 	}
@@ -126,24 +43,48 @@ public class Boomerang : MonoBehaviour
 		initialized = true;
 	}
 
-	void Move()
+	public void Move()
 	{
-		prevPos = transform.position;
+		float distance = Vector2.Distance(transform.position, hex.position);
+		if (distance > 20f) distance = 20f;
+		gameObject.GetComponent<SpriteRenderer>().color = new Color(distance / 20f, 1f - (distance / 20f), 1f - (distance / 20f));
 
-		transform.Rotate(0, 0, angle - transform.rotation.eulerAngles.z);
-		transform.Translate(speed * Time.deltaTime, 0, 0);
+		inputs = new float[1];
 
-		if (transform.position.x > 18 || transform.position.y > 10 || transform.position.x < -18 || transform.position.y < -10)
+		angle = transform.eulerAngles.z % 360f;
+		if (angle < 0f) angle += 360f;
+		else if (angle > 360f) angle -= 360f;
+
+		Vector2 deltaVector = (hex.transform.position - transform.position).normalized;
+
+		Quaternion forwardRotation = Quaternion.AngleAxis(angle, Vector3.forward);
+		Vector2 forwardDirection = forwardRotation * new Vector2(distance, 0f);
+
+		input = Vector2.SignedAngle(deltaVector, forwardDirection);
+		inputs[0] = input;
+
+		output = net.FeedForward(inputs)[0];
+
+		rb.velocity = speed * transform.right;
+		rb.angularVelocity = rotationSpeed * output;
+
+		net.AddFitness((180f - Mathf.Abs(input)) / distance);
+
+		if (transform.position.x > 18)
 		{
-			transform.position = prevPos;
+			transform.SetPositionAndRotation(new Vector2(18, transform.position.y), transform.rotation);
 		}
-		if (angle > 360)
+		if (transform.position.y > 10)
 		{
-			angle = 0;
+			transform.SetPositionAndRotation(new Vector2(transform.position.x, 10), transform.rotation);
 		}
-		else if (angle < 0)
+		if (transform.position.x < -18)
 		{
-			angle = 360;
+			transform.SetPositionAndRotation(new Vector2(-18, transform.position.y), transform.rotation);
+		}
+		if (transform.position.y < -10)
+		{
+			transform.SetPositionAndRotation(new Vector2(transform.position.x, -10), transform.rotation);
 		}
 	}
 }
